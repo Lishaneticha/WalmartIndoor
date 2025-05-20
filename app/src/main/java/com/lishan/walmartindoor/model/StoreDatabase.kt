@@ -5,13 +5,15 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.lishan.walmartindoor.model.dao.ShelfUpdateLogDao
 import com.lishan.walmartindoor.model.dao.StoreDao
 import com.lishan.walmartindoor.model.entity.Section
 import com.lishan.walmartindoor.model.entity.Shelf
+import com.lishan.walmartindoor.model.entity.ShelfUpdateLog
 
 @Database(
-    entities = [Section::class, Shelf::class],
-    version = 1,
+    entities = [Section::class, Shelf::class, ShelfUpdateLog::class],
+    version = 2,
     exportSchema = false
 )
 
@@ -19,6 +21,7 @@ import com.lishan.walmartindoor.model.entity.Shelf
 abstract class StoreDatabase : RoomDatabase() {
 
     abstract fun storeDao(): StoreDao
+    abstract fun shelfUpdateLogDao(): ShelfUpdateLogDao
 
     companion object {
         @Volatile

@@ -1,7 +1,9 @@
-package com.lishan.walmartindoor.model.entity
+package com.lishan.walmartindoor.model.relation
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.lishan.walmartindoor.model.entity.Section
+import com.lishan.walmartindoor.model.entity.Shelf
 
 data class SectionWithShelves(
     @Embedded val section: Section,
