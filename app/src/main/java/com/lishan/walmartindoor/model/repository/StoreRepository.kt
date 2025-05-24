@@ -18,4 +18,6 @@ interface StoreRepository {
     // Shelf Update Log
     suspend fun insertShelfLog(log: ShelfUpdateLog)
     suspend fun getShelfLogs(shelfId: Long): List<ShelfUpdateLog>
+
+    suspend fun insertSectionWithShelves(section: Section, shelves: List<Shelf>)
 }

@@ -34,4 +34,18 @@ interface StoreDao {
 
     @Delete
     suspend fun deleteSection(section: Section)
+
+    @Insert
+    suspend fun insertShelves(shelves: List<Shelf>)
+
+    @Transaction
+    suspend fun insertSectionWithShelves(section: Section, shelves: List<Shelf>) {
+        val sectionId = insertSection(section)
+
+        val shelvesWithSectionId = shelves.map {
+            it.copy(sectionOwnerId = sectionId)
+        }
+
+        insertShelves(shelvesWithSectionId)
+    }
 }

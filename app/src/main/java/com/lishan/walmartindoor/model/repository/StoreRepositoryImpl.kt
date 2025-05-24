@@ -43,4 +43,8 @@ class StoreRepositoryImpl @Inject constructor(
     override suspend fun getShelfLogs(shelfId: Long): List<ShelfUpdateLog> {
         return shelfUpdateLogDao.getLogsForShelf(shelfId)
     }
+
+    override suspend fun insertSectionWithShelves(section: Section, shelves: List<Shelf>) {
+        storeDao.insertSectionWithShelves(section, shelves)
+    }
 }
