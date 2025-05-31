@@ -3,6 +3,7 @@ package com.lishan.walmartindoor.model.dao
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
@@ -13,10 +14,13 @@ import com.lishan.walmartindoor.model.entity.Shelf
 @Dao
 interface StoreDao {
 
-    @Insert
+    @Query("SELECT * FROM sections WHERE name = :name LIMIT 1")
+    suspend fun getSectionByName(name: String): Section?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSection(section: Section): Long
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertShelf(shelf: Shelf): Long
 
     @Transaction
@@ -40,7 +44,8 @@ interface StoreDao {
 
     @Transaction
     suspend fun insertSectionWithShelves(section: Section, shelves: List<Shelf>) {
-        val sectionId = insertSection(section)
+        val existing = getSectionByName(section.name)
+        val sectionId = existing?.sectionId ?: insertSection(section)
 
         val shelvesWithSectionId = shelves.map {
             it.copy(sectionOwnerId = sectionId)

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -51,9 +52,77 @@ class MainActivity : ComponentActivity() {
                 Column(modifier = Modifier.fillMaxSize()) {
                     Surface(modifier = Modifier.fillMaxSize()) {
                         StoreLayoutCanvas2(){ index ->
-                            Log.d("LongPress", "Long-pressed on rect #$index")}
+                            Log.d("LongPress", "Long-pressed on rect #$index")
+                        }
+
+//                        MapStyledStoreCanvas(){}
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun MapStyledStoreCanvas(
+    onShelfClick: (Int) -> Unit
+) {
+    val shelfRects = listOf(
+        Offset(100f, 100f) to Size(120f, 40f),
+        Offset(250f, 100f) to Size(120f, 40f),
+        Offset(100f, 180f) to Size(270f, 40f)
+    )
+
+    val selectedIndex = remember { mutableStateOf(-1) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5)) // light gray map background
+            .pointerInput(Unit) {
+                detectTapGestures { tap ->
+                    shelfRects.forEachIndexed { index, (offset, size) ->
+                        val rect = Rect(offset, size)
+                        if (rect.contains(tap)) {
+                            selectedIndex.value = index
+                            onShelfClick(index)
+                            return@detectTapGestures
+                        }
+                    }
+                }
+            }
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            shelfRects.forEachIndexed { index, (offset, size) ->
+                // Fill color
+                drawRect(
+                    color = if (index == selectedIndex.value)
+                        Color(0xFFFFF176) // yellow highlight
+                    else
+                        Color(0xFFB0BEC5), // gray-blue shelf
+                    topLeft = offset,
+                    size = size
+                )
+
+                // Border
+                drawRect(
+                    color = Color.Black,
+                    topLeft = offset,
+                    size = size,
+                    style = Stroke(width = 1f)
+                )
+
+                // Text label (centered)
+                drawContext.canvas.nativeCanvas.drawText(
+                    "Shelf ${index + 1}",
+                    offset.x + size.width / 4,
+                    offset.y + size.height / 1.5f,
+                    Paint().asFrameworkPaint().apply {
+                        isAntiAlias = true
+                        color = android.graphics.Color.BLACK
+                        textSize = 24f
+                    }
+                )
             }
         }
     }
@@ -73,6 +142,8 @@ fun StoreLayoutCanvas2(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val saveSuccess by viewModel.saveSuccess.collectAsState()
+    val sectionsWithShelves by viewModel.sectionsWithShelves.collectAsState()
+    val existingShelfLabels = remember { mutableStateListOf("") }
     val scope = rememberCoroutineScope()
 
     // Observe save success and show snackbar
@@ -226,6 +297,7 @@ fun StoreLayoutCanvas2(
                         showDialog = showDialog,
                         onDismiss = { showDialog = false },
                         sectionName = sectionName,
+                        existingShelfLabels = existingShelfLabels,
                         onSave = { sectionName, shelfLabels ->
                             viewModel.saveSectionWithShelves(sectionName, shelfLabels, Offset(0f, 0f))
                         }
@@ -257,7 +329,12 @@ fun StoreLayoutCanvas2(
 
                             val fillColor = if (index == selectedIndex) {
                                 println("rect offset: ${rectOffset.x}f, ${rectOffset.y}f")
+                                existingShelfLabels.clear()
+                                val existingShelves = sectionsWithShelves.firstOrNull { section -> section.section.name == label }?.shelves?.map { it.label } ?: listOf("")
+                                existingShelfLabels.addAll(existingShelves)
                                 Color.Red
+                            } else if (sectionsWithShelves.any { section -> section.section.name == label }) {
+                                Color.Yellow
                             } else Color.Transparent
 
                             // Fill first (only if selected)
@@ -433,8 +510,6 @@ fun StoreLayoutCanvas2(
             }
         }
     }
-
-
 }
 
 @Composable
@@ -442,11 +517,14 @@ fun SectionShelfDialog(
     showDialog: Boolean,
     onDismiss: () -> Unit,
     sectionName: String,
+    existingShelfLabels: SnapshotStateList<String>,
     onSave: (sectionName: String, shelfLabels: List<String>) -> Unit
 ) {
     if (!showDialog) return
 
     val shelfLabels = remember { mutableStateListOf("") }
+    shelfLabels.clear()
+    shelfLabels.addAll(existingShelfLabels)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -502,11 +580,15 @@ fun SectionShelfDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = {
-                val cleaned = shelfLabels.map { it.trim() }.filter { it.isNotBlank() }
-                onSave(sectionName.trim(), cleaned)
-                onDismiss()
-            }) {
+            TextButton(
+                onClick = {
+                    val cleaned = shelfLabels.map { it.trim() }.filter { it.isNotBlank() }.minus(existingShelfLabels)
+                    if (cleaned.isNotEmpty()){
+                        onSave(sectionName.trim(), cleaned)
+                    }
+                    onDismiss()
+                }
+            ) {
                 Text("Save")
             }
         },

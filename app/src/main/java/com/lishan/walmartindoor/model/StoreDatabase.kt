@@ -13,10 +13,9 @@ import com.lishan.walmartindoor.model.entity.ShelfUpdateLog
 
 @Database(
     entities = [Section::class, Shelf::class, ShelfUpdateLog::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
-
 //@TypeConverters(OffsetTypeConverter::class)
 abstract class StoreDatabase : RoomDatabase() {
 

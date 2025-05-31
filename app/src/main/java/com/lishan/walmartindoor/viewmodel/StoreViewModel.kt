@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lishan.walmartindoor.model.entity.Section
 import com.lishan.walmartindoor.model.entity.Shelf
+import com.lishan.walmartindoor.model.relation.SectionWithShelves
 import com.lishan.walmartindoor.model.repository.StoreRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,13 @@ class StoreViewModel @Inject constructor(
 
     private val _saveSuccess = MutableStateFlow(false)
     val saveSuccess: StateFlow<Boolean> = _saveSuccess
+
+    private val _sectionsWithShelves = MutableStateFlow<List<SectionWithShelves>>(emptyList())
+    val sectionsWithShelves: StateFlow<List<SectionWithShelves>> = _sectionsWithShelves
+
+    init {
+        getSectionsWithShelves()
+    }
 
     fun saveSectionWithShelves(
         sectionName: String,
@@ -40,11 +48,18 @@ class StoreViewModel @Inject constructor(
                 }
 
                 repository.insertSectionWithShelves(section, shelves)
+                _sectionsWithShelves.value = repository.getSectionsWithShelves()
                 _saveSuccess.value = true
             } catch (e: Exception) {
                 Log.e("StoreViewModel", "Error saving: ${e.message}")
                 _saveSuccess.value = false
             }
+        }
+    }
+
+    fun getSectionsWithShelves() {
+        viewModelScope.launch{
+            _sectionsWithShelves.value = repository.getSectionsWithShelves()
         }
     }
 
