@@ -14,6 +14,12 @@ This app was designed with real-world store operations in mind. It displays an i
 - 🧩 Custom path visualization (for large stores)  
 - 🖼️ Zoom and pan gesture support  
 
+## 📸 Screenshots
+
+| Store Map View | Shelf Info Dialog | Zoom & Pan |
+|----------------|-------------------|-------------|
+| ![](Screenshot_1.png) | ![](Screenshot_2.png) | ![](Screenshot_3.gif) |
+
 ## 🎥 Demo Video
 
 > 📂 Video File: [`demo.mp4`](./demo.mp4)
